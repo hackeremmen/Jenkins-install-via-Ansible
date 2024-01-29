@@ -1,0 +1,49 @@
+---
+- name: Jenkins Kurulumu
+  hosts: jenkins
+  become: true
+
+  tasks:
+    - name: Jenkins için Java 8 JDK kurulumu
+      apt:
+        name: openjdk-8-jdk
+        state: present
+
+    - name: Jenkins için gerekli paketlerin kurulumu
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - wget
+        - git
+        - unzip
+
+    - name: Jenkins indirme ve kurulum
+      get_url:
+        url: "https://pkg.jenkins.io/debian/jenkins.io.key"
+        dest: "/tmp/jenkins.io.key"
+      become: true
+
+    - name: Jenkins APT deposunu eklemek
+      apt_key:
+        keyserver: keyserver.ubuntu.com
+        id: 9B7D32F2D50582E6
+      become: true
+
+    - name: Jenkins APT deposunu eklemek
+      apt_repository:
+        repo: deb http://pkg.jenkins.io/debian-stable binary/
+        state: present
+      become: true
+
+    - name: Jenkins paketini kurmak
+      apt:
+        name: jenkins
+        state: present
+      become: true
+
+    - name: Jenkins servisini başlatmak
+      systemd:
+        name: jenkins
+        state: started
+        enabled: true
